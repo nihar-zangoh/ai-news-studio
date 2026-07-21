@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Content Studio</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #111111;
+            --text: #ffffff;
+            --text-secondary: #888888;
+            --accent: #007AFF;
+            --border: #333333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: #333; cursor: not-allowed; }
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h3 { margin-top: 0; font-size: 1.2rem; }
+        .content-box {
+            background-color: #0a0a0a;
+            border: 1px solid #222;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+            color: #ddd;
+        }
+        .copy-btn {
+            background-color: #222;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+        }
+        .hidden { display: none; }
+        .loader { text-align: center; color: var(--text-secondary); margin: 2rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI News Content Studio</h1>
+        
+        <div class="controls">
+            <button id="fetchBtn" onclick="fetchBreakingNews()">Fetch Breaking News</button>
+        </div>
+
+        <div id="loader" class="loader hidden">Fetching and generating content... this may take a few seconds...</div>
+
+        <div id="resultContainer" class="hidden">
+            <div class="card">
+                <h3>Headline</h3>
+                <div id="headline" class="content-box"></div>
+                <p style="color: var(--text-secondary)">Category: <span id="category"></span></p>
+            </div>
+
+            <div class="card">
+                <h3>Social Media Post (Professional)</h3>
+                <div id="socialPost" class="content-box"></div>
+                <button class="copy-btn" onclick="copyToClipboard('socialPost')">Copy Post</button>
+            </div>
+
+            <div class="card">
+                <h3>Image Generation Prompt</h3>
+                <div id="imagePrompt" class="content-box"></div>
+                <button class="copy-btn" onclick="copyToClipboard('imagePrompt')">Copy Image Prompt</button>
+                <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.9rem;">Template: <span id="imageTemplate"></span></p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Negative Prompt: <span id="negativePrompt"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchBreakingNews() {
+            const btn = document.getElementById('fetchBtn');
+            const loader = document.getElementById('loader');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            try {
+                // We'll add an endpoint to trigger breaking news fetch
+                const res = await fetch('/api/v1/generate-breaking-news', { method: 'POST' });
+                const json = await res.json();
+                
+                if (json.status === 'success') {
+                    const data = json.data;
+                    document.getElementById('headline').innerText = data.headline;
+                    document.getElementById('category').innerText = data.category;
+                    
+                    const hashtags = data.hashtags.join(' ');
+                    document.getElementById('socialPost').innerText = data.social_post + '\n\n' + hashtags;
+                    
+                    document.getElementById('imagePrompt').innerText = data.image_prompt;
+                    document.getElementById('imageTemplate').innerText = data.image_template;
+                    document.getElementById('negativePrompt').innerText = data.negative_prompt;
+
+                    resultContainer.classList.remove('hidden');
+                } else {
+                    alert('Error generating content: ' + json.message);
+                }
+            } catch (err) {
+                alert('Request failed. Make sure backend is running.');
+            } finally {
+                btn.disabled = false;
+                loader.classList.add('hidden');
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

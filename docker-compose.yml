@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  news-studio:
+    build: .
+    container_name: ai-news-studio
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEBUG=True
+    restart: unless-stopped
