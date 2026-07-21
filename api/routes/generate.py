@@ -2,13 +2,17 @@ from fastapi import APIRouter, HTTPException, Depends
 from models.schemas import ContentGenerationRequest, ApiResponse, GeneratedContentPackage
 from services.content_generator import ContentGeneratorService
 from providers.ai.mock_provider import MockAIProvider
+from providers.ai.gemini_provider import GeminiProvider
 from providers.news.rss_provider import RSSNewsProvider
+from core.config import settings
 
 router = APIRouter()
 
 def get_content_generator() -> ContentGeneratorService:
-    # In a real app, this would use a factory based on config to return the right provider
-    ai_provider = MockAIProvider()
+    if settings.GEMINI_API_KEY:
+        ai_provider = GeminiProvider(api_key=settings.GEMINI_API_KEY)
+    else:
+        ai_provider = MockAIProvider()
     return ContentGeneratorService(ai_provider=ai_provider)
 
 @router.post("/generate", response_model=ApiResponse)
@@ -17,11 +21,11 @@ async def generate_content(
     generator: ContentGeneratorService = Depends(get_content_generator)
 ):
     try:
-        raw_text = request.raw_text or "Sample raw text derived from URL..."
-        if request.url:
-            # Here we would use the News Fetcher provider
-            pass
+        if not request.raw_text and not request.url:
+            raise HTTPException(status_code=400, detail="Must provide raw_text or url")
             
+        raw_text = request.raw_text or f"Fetching content from {request.url} is not yet implemented. Please provide raw text."
+        
         content_package = await generator.generate_content(raw_text)
         
         return ApiResponse(

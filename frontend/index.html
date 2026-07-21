@@ -74,6 +74,22 @@
             font-size: 0.85rem;
             padding: 0.5rem 1rem;
         }
+        .textarea-container {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            background-color: #0a0a0a;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
         .hidden { display: none; }
         .loader { text-align: center; color: var(--text-secondary); margin: 2rem 0; }
     </style>
@@ -82,8 +98,12 @@
     <div class="container">
         <h1>AI News Content Studio</h1>
         
+        <div class="textarea-container">
+            <textarea id="newsInput" placeholder="Paste the top/most relevant news text or URL here..."></textarea>
+        </div>
+
         <div class="controls">
-            <button id="fetchBtn" onclick="fetchBreakingNews()">Fetch Breaking News</button>
+            <button id="fetchBtn" onclick="generateContent()">Generate Content</button>
         </div>
 
         <div id="loader" class="loader hidden">Fetching and generating content... this may take a few seconds...</div>
@@ -112,7 +132,13 @@
     </div>
 
     <script>
-        async function fetchBreakingNews() {
+        async function generateContent() {
+            const rawText = document.getElementById('newsInput').value;
+            if (!rawText.trim()) {
+                alert("Please paste some news text first.");
+                return;
+            }
+
             const btn = document.getElementById('fetchBtn');
             const loader = document.getElementById('loader');
             const resultContainer = document.getElementById('resultContainer');
@@ -122,8 +148,13 @@
             resultContainer.classList.add('hidden');
 
             try {
-                // We'll add an endpoint to trigger breaking news fetch
-                const res = await fetch('/api/v1/generate-breaking-news', { method: 'POST' });
+                const res = await fetch('/api/v1/generate', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ raw_text: rawText })
+                });
                 const json = await res.json();
                 
                 if (json.status === 'success') {
