@@ -3,16 +3,22 @@ from models.schemas import ContentGenerationRequest, ApiResponse, GeneratedConte
 from services.content_generator import ContentGeneratorService
 from providers.ai.mock_provider import MockAIProvider
 from providers.ai.gemini_provider import GeminiProvider
+from providers.ai.ollama_provider import OllamaProvider
 from providers.news.rss_provider import RSSNewsProvider
 from core.config import settings
 
 router = APIRouter()
 
 def get_content_generator() -> ContentGeneratorService:
-    if settings.GEMINI_API_KEY:
+    provider = settings.AI_PROVIDER.lower()
+    
+    if provider == "gemini" and settings.GEMINI_API_KEY:
         ai_provider = GeminiProvider(api_key=settings.GEMINI_API_KEY)
+    elif provider == "ollama":
+        ai_provider = OllamaProvider(base_url=settings.OLLAMA_BASE_URL, model=settings.OLLAMA_MODEL)
     else:
         ai_provider = MockAIProvider()
+        
     return ContentGeneratorService(ai_provider=ai_provider)
 
 @router.post("/generate", response_model=ApiResponse)

@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str | None = None
     GROQ_API_KEY: str | None = None
 
+    # AI Provider configuration
+    # Can be: 'mock', 'gemini', 'openai', 'anthropic', 'ollama'
+    AI_PROVIDER: str = "mock"
+    OLLAMA_BASE_URL: str = "http://localhost:11434/v1"
+    OLLAMA_MODEL: str = "gemma:2b"
+
     # Allowed categories for news
     CATEGORIES: List[str] = [
         "Artificial Intelligence", "Technology", "Startups", "Programming", 
